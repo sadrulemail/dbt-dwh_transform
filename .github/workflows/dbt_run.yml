@@ -1,0 +1,53 @@
+name: dbt Run on Push
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  run-dbt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install dbt-snowflake
+        run: pip install dbt-snowflake
+      
+      - name: Create profiles directory and file
+        run: |
+          mkdir -p ~/.dbt
+          cat > ~/.dbt/profiles.yml << EOF
+          dwh_transform:
+            target: dev
+            outputs:
+              dev:
+                type: snowflake
+                account: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+                user: ${{ secrets.SNOWFLAKE_USER }}
+                password: ${{ secrets.SNOWFLAKE_PASSWORD }}
+                role: ${{ secrets.SNOWFLAKE_ROLE }}
+                database: ${{ secrets.SNOWFLAKE_DATABASE }}
+                warehouse: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+                schema: ${{ secrets.SNOWFLAKE_SCHEMA }}
+                threads: 1
+                client_session_keep_alive: false
+          EOF
+      
+      - name: Check packages.yml
+        run: cat packages.yml || echo "No packages.yml found"
+      
+      - name: Install dbt dependencies
+        run: dbt deps --profiles-dir ~/.dbt
+      
+      - name: Verify dbt connection
+        run: dbt debug --profiles-dir ~/.dbt
+      
+      - name: Run dbt models
+        run: dbt run --full-refresh --profiles-dir ~/.dbt
