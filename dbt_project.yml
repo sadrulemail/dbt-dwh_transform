@@ -1,0 +1,18 @@
+name: 'dwh_transform'
+version: '1.0.0'
+config-version: 2
+
+profile: 'dwh_transform' # This name must match the profile in your profiles.yml
+
+models:
+  warehouse_project: # This is your project name
+    # All models in this directory will be created in the `TRANSFORM_DATA` schema.
+    transform_data:
+      +schema: transform_data2
+      # Incremental models will automatically handle schema changes.
+      +on_schema_change: 'sync_all_columns'
+    
+    # Configure the 'source' models to not be materialized into tables.
+    # This prevents dbt from creating redundant tables in your raw data schema.
+    source:
+      +materialized: 'nothing'
