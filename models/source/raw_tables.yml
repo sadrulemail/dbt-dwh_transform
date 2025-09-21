@@ -1,0 +1,12 @@
+version: 2
+
+sources:
+  - name: raw_data
+    schema: RAW_DATA
+    tables:
+      - name: customers
+      - name: manufacturers
+      - name: products
+      - name: inventory
+      - name: sales
+      - name: sales_line_items
